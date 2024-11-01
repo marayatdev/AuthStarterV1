@@ -21,6 +21,8 @@ export class AuthRoutes {
       this.authController.createUser
     );
     this.router.post(`${this.path}/refresh`, this.authController.refreshToken);
+
+    this.router.put(`${this.path}/edit/:id`, authenticateToken, this.authController.updateUser);
     this.router.get(
       `${this.path}/me`,
       authenticateToken,

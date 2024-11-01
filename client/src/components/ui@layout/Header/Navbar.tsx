@@ -126,6 +126,7 @@ export function Header() {
                     stroke={1.5}
                   />
                 }
+                onClick={() => navigate("/profile")}
               >
                 Account settings
               </Menu.Item>

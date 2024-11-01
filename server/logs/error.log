@@ -329,3 +329,9 @@
 2024-09-03 14:00:27:027 [31merror[39m: [31mSetup failed: Database connection error: PrismaClientInitializationError: Can't reach database server at `172.30.11.44:3306`[39m
 
 [31mPlease make sure your database server is running at `172.30.11.44:3306`.[39m
+2024-09-05 14:42:17:4217 [31merror[39m: [31mError loading route module auth.ts: TSError: ⨯ Unable to compile TypeScript:[39m
+[31m[96msrc/controllers/auth.ts[0m:[93m118[0m:[93m24[0m - [91merror[0m[90m TS1005: [0m'=>' expected.[39m
+
+[31m[7m118[0m     next: NextFunction){[39m
+[31m[7m   [0m [91m                       ~[0m[39m
+[31m[39m

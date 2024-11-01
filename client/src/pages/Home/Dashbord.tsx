@@ -1,13 +1,11 @@
-import { Paper } from "@mantine/core";
-import { Header } from "../../components/ui@layout/Header/Navbar";
-import { Carousel } from "@mantine/carousel";
 import "@mantine/carousel/styles.css";
+import { DefaultLayout } from "../../components/ui@layout/DefultLayout";
 
 function Dashboard() {
   return (
-    <>
-      <Header />
-      <Paper w={"80%"}>
+    <DefaultLayout>
+      <h1>Dashboard</h1>
+      {/* <Paper w={"80%"}>
         <Carousel
           slideSize="70%"
           height={200}
@@ -20,21 +18,8 @@ function Dashboard() {
           <Carousel.Slide bg={"blue"}>2</Carousel.Slide>
           <Carousel.Slide bg={"blue"}>3</Carousel.Slide>
         </Carousel>
-      </Paper>
-    </>
-    // <div>
-    //   Dashboard
-    //   <p>
-    //     Welcome, {user.username} {user.role}!
-    //   </p>
-    //   {user.email && <p>Email: {user.email}</p>}
-    //   {user.imageProfile && (
-    //     <img
-    //       src={`http://localhost:3000/api/media/${user.imageProfile}`}
-    //       alt="Profile"
-    //     />
-    //   )}
-    // </div>
+      </Paper> */}
+    </DefaultLayout>
   );
 }
 

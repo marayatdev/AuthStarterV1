@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { AuthService } from "../services/auth.service";
-import { TypedRequestBody } from "../utils/request";
+import { TypedRequest, TypedRequestBody } from "../utils/request";
 import argon2 from "argon2";
 import upload from "../shared/middlewares/upload";
 import jwt from "jsonwebtoken";
@@ -108,6 +108,20 @@ export class AuthController {
     }
   };
 
+  public updateUser = async (req: TypedRequest<{ id: string }, { username?: string, email?: string, image_profile?: string }, {}>, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const { username, email, image_profile } = req.body;
+
+      const user = await this.authService.updateUser(Number(id), username, email, image_profile);
+
+      return res.status(200).json(user);
+
+    } catch (error) {
+      next(error);
+    }
+  }
+
   public refreshToken = async (
     req: Request,
     res: Response,
@@ -165,6 +179,7 @@ export class AuthController {
       }
 
       return res.json({
+        id: user.user_id,
         email: user.email,
         username: user.username,
         role: user.role,

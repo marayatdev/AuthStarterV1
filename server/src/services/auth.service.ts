@@ -27,4 +27,16 @@ export class AuthService {
     });
   }
 
+  public async updateUser(id: number, username: string, email: string, imagePath: string) {
+    return this.prisma.users.update({
+      where: { user_id: id },
+      data: {
+        username,
+        email,
+        image_profile: imagePath,
+        updateAt: new Date(),
+      },
+    })
+  }
+
 }
