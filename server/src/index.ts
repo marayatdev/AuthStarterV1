@@ -1,12 +1,12 @@
 import express, { Application } from "express";
 import dotenv from "dotenv";
 import prisma from "./utils/prisma";
-import { logError, logInfo } from "./utils/logger";
+import logger from "./utils/logger";
 import bodyParser from "body-parser";
 import cors from "cors";
-import morgan from "morgan";
 import fs from "fs";
 import path from "path";
+import morganMiddleware from "./shared/middlewares/logHttpMiddleware";
 
 dotenv.config();
 
@@ -25,13 +25,13 @@ class App {
       .then(() => this.initializeRoutes())
       .then(() => this.startServer())
       .catch((error) => {
-        logError(`Setup failed: ${error.message}`);
+        logger.error(`Setup failed: ${error.message}`);
         process.exit(1);
       });
   }
 
   private configureMiddleware(): void {
-    this.app.use(morgan("combined"));
+    this.app.use(morganMiddleware);
     this.app.use(cors());
     this.app.use(bodyParser.json());
   }
@@ -39,7 +39,7 @@ class App {
   private async initializeDatabase(): Promise<void> {
     try {
       await prisma.$connect();
-      logInfo("Connected to database");
+      logger.info("Connected to database");
     } catch (error) {
       throw new Error(`Database connection error: ${error}`);
     }
@@ -56,18 +56,25 @@ class App {
         const routeModule = await import(path.resolve(routePath, file));
         if (routeModule.default) {
           this.app.use("/api", routeModule.default);
+          // http://localhost:3000/api/media/
+          this.app.use('/api/media', express.static(path.join(__dirname, './uploads/')))
         }
       } catch (error) {
-        logError(`Error loading route module ${file}: ${error}`);
+        logger.error(`Error loading route module ${file}: ${error}`);
       }
     }
   }
 
   private startServer(): void {
     this.app.listen(this.port, () => {
-      logInfo(`🚀 Server is running on http://localhost:${this.port}`);
+      logger.info(`=================================`);
+      logger.info(`========== Hello World ==========`);
+      logger.info(`🚀 Server is running on port ${this.port}`);
+      logger.info(`=================================`);
     });
   }
+
+
 }
 
 new App();

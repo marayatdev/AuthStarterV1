@@ -1,13 +1,16 @@
 import { NextFunction, Request, Response } from "express";
 import { AuthService } from "../services/auth.service";
-import { TypedRequestBody } from "../utils/request";
+import { TypedRequest, TypedRequestBody } from "../utils/request";
 import argon2 from "argon2";
-import upload from "../middlewares/upload";
+import upload from "../shared/middlewares/upload";
 import jwt from "jsonwebtoken";
+import path from "path";
+import { hash } from "crypto";
 
 export class AuthController {
   private jwtSecret = process.env.JWT_SECRET || "default_secret";
-  private refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET || "default_refresh_secret";
+  private refreshTokenSecret =
+    process.env.REFRESH_TOKEN_SECRET || "default_refresh_secret";
   private authService = new AuthService();
 
   public createUser = async (
@@ -15,39 +18,43 @@ export class AuthController {
       username: string;
       email: string;
       password: string;
-    }>,
+      image_profile: File;
+    }> & { file?: Express.Multer.File },
     res: Response,
     next: NextFunction
   ) => {
     try {
-      // Handle file upload
-      upload.single("image_profile")(req, res, async (err) => {
-        if (err) {
-          return res.status(400).json({ message: err.message });
-        }
+      const { username, email, password } = req.body;
 
-        const { username, email, password } = req.body;
-        const imagePath = req.file?.path;
+      const imagePath = req.file ? req.file.path : null;
+      const imageName = imagePath ? path.basename(imagePath) : "";
 
-        // Check if email already exists
-        const existingEmail = await this.authService.findEmail(email);
-        if (existingEmail) {
-          return res.status(409).json({ message: "Email already exists" });
-        }
+      const existingEmail = await this.authService.findEmail(email);
+      if (existingEmail) {
+        return res.status(409).json({
+          error: "email already exists",
+          path: "email",
+          hasError: true,
+        });
+      }
 
-        // Hash the password
-        const hashPassword = await argon2.hash(password);
+      const hashPassword = await argon2.hash(password);
 
-        // Create the user
-        const user = await this.authService.createUser(
-          username,
-          email,
-          hashPassword,
-          imagePath ?? ""
-        );
+      // upload.single("image_profile")(req, res, (err) => {
+      //   if (err) {
+      //     console.log(err);
+      //     return res.status(400).json({ error: err.message });
+      //   }
+      // });
 
-        return res.status(201).json(user);
-      });
+      const user = await this.authService.createUser(
+        username,
+        email,
+        hashPassword,
+        imageName || ""
+      );
+
+      return res.status(201).json(user);
     } catch (error) {
       next(error);
     }
@@ -63,10 +70,13 @@ export class AuthController {
   ) => {
     try {
       const { email, password } = req.body;
-
       const user = await this.authService.findEmail(email);
       if (!user) {
-        return res.status(404).json({ message: "User not found" });
+        return res.status(404).json({
+          error: "email not found",
+          path: "email",
+          hasError: true,
+        });
       }
 
       const valid = await argon2.verify(user.password, password);
@@ -80,9 +90,10 @@ export class AuthController {
           email: user.email,
           username: user.username,
           role: user.role,
+          image_profile: user.image_profile,
         },
         this.jwtSecret,
-        { expiresIn: "1m" }
+        { expiresIn: "15m" } // Changed to 15 minutes for more security
       );
 
       const refreshToken = jwt.sign(
@@ -97,6 +108,20 @@ export class AuthController {
     }
   };
 
+  public updateUser = async (req: TypedRequest<{ id: string }, { username?: string, email?: string, image_profile?: string }, {}>, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const { username, email, image_profile } = req.body;
+
+      const user = await this.authService.updateUser(Number(id), username, email, image_profile);
+
+      return res.status(200).json(user);
+
+    } catch (error) {
+      next(error);
+    }
+  }
+
   public refreshToken = async (
     req: Request,
     res: Response,
@@ -108,21 +133,25 @@ export class AuthController {
         return res.status(400).json({ message: "Refresh token is required" });
       }
 
-      jwt.verify(refreshToken, this.refreshTokenSecret, (err: jwt.VerifyErrors | null, decoded: any) => {
-        if (err) {
-          return res.status(403).json({ message: "Invalid refresh token" });
+      jwt.verify(
+        refreshToken,
+        this.refreshTokenSecret,
+        (err: jwt.VerifyErrors | null, decoded: any) => {
+          if (err) {
+            return res.status(403).json({ message: "Invalid refresh token" });
+          }
+
+          const newToken = jwt.sign(
+            {
+              id: decoded.id,
+            },
+            this.jwtSecret,
+            { expiresIn: "15m" } // Changed to 15 minutes for consistency
+          );
+
+          return res.json({ token: newToken });
         }
-
-        const newToken = jwt.sign(
-          {
-            id: decoded.id,
-          },
-          this.jwtSecret,
-          { expiresIn: "15m" }
-        );
-
-        return res.json({ token: newToken });
-      });
+      );
     } catch (error) {
       next(error);
     }
@@ -143,18 +172,21 @@ export class AuthController {
       const decodedToken = jwt.verify(token, this.jwtSecret) as jwt.JwtPayload;
 
       const user = await this.authService.findById(decodedToken.id);
+      console.log("aaa", user);
+
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
 
       return res.json({
+        id: user.user_id,
         email: user.email,
         username: user.username,
+        role: user.role,
+        image_profile: user.image_profile,
       });
     } catch (error) {
       next(error);
     }
   };
-
-
 }

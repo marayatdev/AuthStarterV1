@@ -1,81 +1,94 @@
 import {
-    TextInput,
-    PasswordInput,
-    Checkbox,
-    Anchor,
-    Paper,
-    Title,
-    Text,
-    Container,
-    Group,
-    Button,
-} from '@mantine/core';
-import classes from './AuthenticationTitle.module.css';
-import { useForm } from '@mantine/form';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../../contexts/Auth/AuthContext';
+  Paper,
+  TextInput,
+  PasswordInput,
+  Checkbox,
+  Button,
+  Title,
+  Text,
+  Anchor,
+} from "@mantine/core";
+import classes from "./AuthenticationTitle.module.css";
+import { useForm } from "@mantine/form";
+import { useNavigate } from "react-router-dom";
+import { login } from "../../../services/Auth/authService";
+import { useAuth } from "../../../contexts/Auth/AuthContext";
+import { useState } from "react";
+import { ErrorProps } from "../../../interfaces/auth";
 
 interface Login {
-    email: string;
-    password: string;
+  email: string;
+  password: string;
 }
 
 export function Login() {
+  const navigate = useNavigate();
+  const { setToken, setRefreshToken } = useAuth();
+  const [error, setError] = useState<ErrorProps | null>(null);
 
-    const navigate = useNavigate();
-    const { loginUser } = useAuth();
+  const form = useForm<Login>({
+    mode: "uncontrolled",
+    initialValues: { email: "marayat@gmail.com", password: "1234" },
+  });
 
-    const handleSubmit = async (values: Login) => {
-        try {
-            await loginUser(values.email, values.password);
-            navigate('/dashboard');
-        } catch (error) {
-            console.error('Login failed:', error);
-        }
-    };
+  const handleSubmit = async (value: Login) => {
+    try {
+      const data = await login(value);
+      if (data) {
+        setToken(data.token);
+        setRefreshToken(data.refreshToken);
+        navigate("/dashboard");
+      }
+    } catch (error: any) {
+      if (error.path && error.error) {
+        form.setFieldError(error.path, error.error);
+        setError(error); // แสดงข้อความ error
+      } else {
+        console.error("An unexpected error occurred:", error);
+      }
+    }
+  };
 
+  return (
+    <div className={classes.wrapper}>
+      <Paper className={classes.form} radius={0} p={30}>
+        <Title order={2} className={classes.title} ta="center" mt="md" mb={50}>
+          Login!!!
+        </Title>
 
-    const form = useForm<Login>({
-        mode: 'uncontrolled',
-        initialValues: { email: 'marayat@gmail.com', password: "1234" },
-    });
+        <form onSubmit={form.onSubmit(handleSubmit)}>
+          <TextInput
+            label="Email address"
+            placeholder="hello@gmail.com"
+            size="md"
+            {...form.getInputProps("email")}
+          />
+          <PasswordInput
+            label="Password"
+            placeholder="Your password"
+            mt="md"
+            size="md"
+            {...form.getInputProps("password")}
+          />
+          <Checkbox label="Keep me logged in" mt="xl" size="md" />
+          <Button fullWidth mt="xl" type="submit" size="md">
+            Login
+          </Button>
+        </form>
 
+        {/* {error && (
+          <Text c="red" mt="md">
+            {error.error}
+          </Text>
+        )} */}
 
-    return (
-        <Container size={420} my={40}>
-            <Title ta="center" className={classes.title}>
-                Welcome back!
-            </Title>
-            <Text c="dimmed" size="sm" ta="center" mt={5}>
-                Do not have an account yet?{' '}
-                <Anchor size="sm" component="button">
-                    Create account
-                </Anchor>
-            </Text>
-            <form onSubmit={form.onSubmit(handleSubmit)}>
-                <Paper withBorder shadow="md" p={30} mt={30} radius="md">
-                    <TextInput
-                        label="Email"
-                        placeholder="you@mantine.dev"
-                        key={form.key('email')}
-                        {...form.getInputProps('email')} />
-                    <PasswordInput
-                        label="Password"
-                        placeholder="Your password"
-                        mt="md"
-                        key={form.key('password')}
-                        {...form.getInputProps('password')} />
-                    <Group justify="space-between" mt="lg">
-                        <Checkbox label="Remember me" />
-                        <Anchor component="button" size="sm">
-                            Forgot password?
-                        </Anchor>
-                    </Group>
-                    <Button type="submit" fullWidth mt=" xl">
-                        Sign in
-                    </Button>
-                </Paper>
-            </form>
-        </Container >
-    );
+        <Text ta="center" mt="md">
+          Don&apos;t have an account?{" "}
+          <Anchor<"a"> href="/register" fw={700}>
+            Register
+          </Anchor>
+        </Text>
+      </Paper>
+    </div>
+  );
 }

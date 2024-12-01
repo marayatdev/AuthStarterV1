@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import logger, { logDebug, logError } from "../utils/logger";
+import logger from "../utils/logger";
 
 export class AuthService {
   private prisma = new PrismaClient();
@@ -26,4 +26,17 @@ export class AuthService {
       where: { user_id: userId },
     });
   }
+
+  public async updateUser(id: number, username: string, email: string, imagePath: string) {
+    return this.prisma.users.update({
+      where: { user_id: id },
+      data: {
+        username,
+        email,
+        image_profile: imagePath,
+        updateAt: new Date(),
+      },
+    })
+  }
+
 }

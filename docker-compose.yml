@@ -1,6 +1,24 @@
 version: '3.8'
 
 services:
+  # backend:
+  #   build: ./server
+  #   container_name: node-backend
+  #   restart: unless-stopped
+  #   ports:
+  #     - '3000:3000'
+  #   networks:
+  #     - app-network
+
+  # frontend:
+  #   build: ./client
+  #   container_name: react-frontend
+  #   restart: unless-stopped
+  #   ports:
+  #     - '80:80'
+  #   networks:
+  #     - app-network
+
   db:
     image: mysql:5.7
     restart: always
@@ -15,5 +33,12 @@ services:
       - '3306'
     volumes:
       - my-db:/var/lib/mysql
+    networks:
+      - app-network
+
 volumes:
   my-db:
+
+networks:
+  app-network:
+    driver: bridge
