@@ -21,6 +21,7 @@ class App {
 
   private setup(): void {
     this.configureMiddleware();
+    this.initializeHealthCheck();
     this.initializeDatabase()
       .then(() => this.initializeRoutes())
       .then(() => this.startServer())
@@ -34,6 +35,18 @@ class App {
     this.app.use(morgan("combined"));
     this.app.use(cors());
     this.app.use(bodyParser.json());
+  }
+
+
+  private initializeHealthCheck(): void {
+  // simple health
+  this.app.get("/health", (_, res) => {
+    res.status(200).json({
+      status: "ok",
+      uptime: process.uptime(),
+      timestamp: new Date(),
+    });
+  });
   }
 
   private async initializeDatabase(): Promise<void> {

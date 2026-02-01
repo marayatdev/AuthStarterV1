@@ -14,10 +14,11 @@ export class AuthService {
     username: string,
     email: string,
     password: string,
-    imagePath: string
+    imagePath: string,
+    create_at: Date = new Date()
   ) {
     return this.prisma.users.create({
-      data: { username, email, password, image_profile: imagePath },
+      data: { username, email, password, image_profile: imagePath, create_at },
     });
   }
 
