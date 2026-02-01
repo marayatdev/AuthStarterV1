@@ -69,7 +69,7 @@ export class AuthController {
         return res.status(404).json({ message: "User not found" });
       }
 
-      const valid = await argon2.verify(user.password, password);
+      const valid = await argon2.verify(user.password || "", password);
       if (!valid) {
         return res.status(401).json({ message: "Invalid credentials" });
       }

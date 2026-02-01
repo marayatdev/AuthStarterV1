@@ -9,11 +9,12 @@ datasource db {
 
 model users {
   user_id       Int       @id @default(autoincrement())
-  username      String    @db.VarChar(255)
-  email         String    @db.VarChar(255)
-  password      String    @db.VarChar(255)
-  image_profile String    @db.VarChar(255)
-  role          String?   @default("1") @db.VarChar(255)
-  createAt      DateTime? @default(now()) @db.DateTime(0)
-  updateAt      DateTime? @default(now()) @db.DateTime(0)
+  username      String?   @db.VarChar(100)
+  password      String?   @db.VarChar(255)
+  email         String?   @db.VarChar(255)
+  f_name        String?   @db.VarChar(255)
+  l_name        String?   @db.VarChar(255)
+  image_profile String?   @db.VarChar(255)
+  role          Int?
+  create_at     DateTime? @db.Timestamp(0)
 }
